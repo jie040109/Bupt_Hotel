@@ -1,6 +1,10 @@
+from flask import Flask
 from extension import db
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from flask import jsonify, make_response, abort
+from sqlalchemy import and_ , or_
 import threading
 from datetime import datetime
 class ROOM(db.Model):
@@ -398,14 +402,6 @@ class scheduler(db.Model):
         timer.start()
 
 
-
-
-
-
-
-
-    
-
 class server(db.Model):
     __tablename__='server'
     id = db.Column(db.Integer, primary_key=True,info={'identity':'ID'})
@@ -427,6 +423,21 @@ class server(db.Model):
         self.fee=fee
         self.fee_rate=fee_rate
         self.fan_speed=fan_speed
+    def change_temp(self, target_temp):
+        self.target_temp = target_temp
+        return True
+    def change_fan_speed(self, fan_speed):
+        self.fan_speed = fan_speed
+        return True
+    def delete_server(self):
+        self.room_id = 0  # 将服务对象设置为空闲
+        self.state = 'FREE'  # 状态为FREE
+        return self.fee
+    def set_serve_time(self):
+        self.serve_time = datetime.now() - self.start_time
+    def set_fee(self, fee):
+        self.fee = fee
+
 
 class statistic_controller(db.Model):
     __tablename__='statistic_controller'
@@ -440,7 +451,7 @@ def init_db():
         for j in range(50):
             r=ROOM(room_id=(i+1)*100+j,init_temp=25.0,current_temp=25.0,target_temp=25.0,fan_speed='MIDDLE',state='SHUTDOWN',fee=0.0,serve_time=0,wait_time=0,operation='关机',request_time='2018-01-01 00:00:00',request_id=0)
             db.session.add(r)
-    s=scheduler(state=2,temp_high_limit=30,temp_low_limit=18,default_target_temp=25,fee_rate_h=1.0,fee_rate_l=0.5,fee_rate_m=0.8)
+    s=scheduler(state='shoutdown',temp_high_limit=30,temp_low_limit=18,default_target_temp=25,fee_rate_h=1.0,fee_rate_l=0.5,fee_rate_m=0.8)
     db.session.add(s)
     for i in range(5):
         s=server(state='FREE',start_time='2018-01-01 00:00:00',serve_time=0,room_id=0,target_temp=25,fee=0.0,fee_rate=0.0,fan_speed=2)
@@ -455,4 +466,176 @@ def init_db():
 if __name__=='__main__':
     init_db()
 
+@staticmethod
+def create_rdr(room_id, begin_date, end_date):
+    detail = []
+    rdr = ROOM.objects.filter(room_id=room_id, request_time__range=(begin_date, end_date)).order_by('-request_time')
+    for r in rdr:
+        dic = {}
+        dic.update(request_id=r.request_id,
+                       request_time=r.request_time,
+                       room_id=r.room_id,
+                       operation=r.get_operation_display(),
+                       current_temp=r.current_temp,
+                       target_temp=r.target_temp,
+                       fan_speed=r.get_fan_speed_display(),
+                       fee=r.fee)
+        detail.append(dic)
 
+    for d in detail:
+        print(d)
+    return detail
+
+@staticmethod
+def print_rdr(room_id, begin_date, end_date):
+    rdr = statistic_controller.create_rdr(room_id, begin_date, end_date)
+    import csv
+    # 文件头，一般就是数据名
+    file_header = ["request_id",
+                       "request_time",
+                       "room_id",
+                       "operation",
+                       "current_temp",
+                       "target_temp",
+                       "fan_speed",
+                       "fee"]
+
+        # 写入数据
+    with open("./result/detailed_list.csv", "w")as csvFile:
+        writer = csv.DictWriter(csvFile, file_header)
+        writer.writeheader()
+        # 写入的内容都是以列表的形式传入函数
+        for d in rdr:
+            writer.writerow(d)
+        csvFile.close()
+        return True
+    
+@staticmethod
+def create_bill(room_id, begin_date, end_date):
+    bill = ROOM.objects.filter(room_id=room_id, request_time__range=(begin_date, end_date)) \
+        .order_by('-request_time')[0]
+    print("fee=%f" % bill.fee)
+
+@staticmethod
+def print_bill(room_id, begin_date, end_date):
+    fee = statistic_controller.create_bill(room_id, begin_date, end_date)
+    import csv
+    with open('./result/bill.csv', 'w') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(["room_id", "fee"])
+        writer.writerow([room_id, fee])
+    return fee
+
+@staticmethod
+def create_report(room_id, type_report, year=-1, month=-1, week=-1):
+    global operations
+    if type_report == '月报表':
+        """经理选择打印月报"""
+        operations = ROOM.objects.filter(
+                and_(room_id=room_id) & (and_(request_time__year=year) & and_(request_time__month=month))).order_by(
+                '-request_time')
+    if not operations:
+        return make_response(jsonify({'error': 'Object does not exist'}), 404)
+
+    elif type_report == '周表':
+        """打印周报"""
+        operations = ROOM.objects.filter(
+            and_(room_id=room_id) & (and_(request_time__year=year) & and_(request_time__week=week))).order_by(
+                '-request_time')
+    if not operations:
+        return make_response(jsonify({'error': 'Object does not exist'}), 404)
+    report = {}
+    report.update(room_id=room_id)
+    # 开关次数
+    switch_times = operations.filter(or_(operation='开机') | or_(operation='关机')).count()
+    report.update(switch_times=switch_times)
+    # 详单条数
+    detailed_num = len(operations)
+    report.update(detailed_num=detailed_num)
+    # 调温次数
+    change_temp_times = operations.filter(operation='调温').count()
+    report.update(change_temp_times=change_temp_times)
+    # 调风次数
+    change_fan_times = operations.filter(operation='调风').count()
+    report.update(change_fan_times=change_fan_times)
+
+    if len(operations) == 0:
+        schedule_times = 0
+        request_time = 0
+        fee = 0
+    else:
+        # 调度次数
+        schedule_times = operations[0].scheduling_num
+        # 请求时长
+        request_time = operations[0].serve_time
+        # 总费用
+        fee = operations[0].fee
+
+    report.update(schedule_times=schedule_times)
+    report.update(request_time=request_time)
+    report.update(fee=fee)
+
+    print(report)
+    return report
+
+@staticmethod
+def print_report(room_id=-1, type_report=1, year=-1, month=-1, week=-1):
+        import csv
+        header = [
+            'room_id', 'switch_times', 'detailed_num', 'change_temp_times', 'change_fan_times',
+            'schedule_times', 'request_time', 'fee'
+        ]
+        with open('./result/report.csv', 'w') as csv_file:
+            writer = csv.DictWriter(csv_file, header)
+
+        writer.writeheader()
+
+        # 如果没有输入房间号，默认输出所有的房间报表
+        if room_id == -1:
+            for i in range(1, 6):
+                report = statistic_controller.create_report(room_id, type_report, year, month, week)
+
+                writer.writerow(report)
+        else:
+            report = statistic_controller.create_report(room_id, type_report, year, month, week)
+
+            writer.writerow(report)
+
+        return True
+
+@staticmethod
+def draw_report(room_id=-1, type_report=1, year=-1, month=-1, week=-1):
+    import matplotlib.pyplot as plt
+    if room_id == -1:
+        import numpy as np
+        import pandas as pd
+        data = []
+        global report
+        rows = []
+        for i in range(1,6):
+            report = statistic_controller.create_report(i, type_report, year, month, week)
+            data.append(list(report.values())[1:-2])
+            rows.append('room' + str(report['room_id']))
+        columns = list(report.keys())[1:-2]
+        rows = tuple(rows)
+        df = pd.DataFrame(data, columns=columns,
+                          index=rows)
+        df.plot(kind='barh', grid=True, colormap='YlGnBu', stacked=True,figsize=(15,5))  # 创建堆叠图
+        print(data)
+        data.reverse()
+        table = plt.table(cellText=data,
+                          cellLoc='center',
+                          cellColours=None,
+                          rowLabels=rows,
+                          rowColours=plt.cm.BuPu(np.linspace(0, 0.5, len(rows)))[::-1],  # BuPu可替换成其他colormap
+                          colLabels=columns,
+                          colColours=plt.cm.Reds(np.linspace(0, 0.5, len(columns)))[::-1],
+                          rowLoc='right',
+                          loc='bottom',
+                          fontsize=10.0)
+        table.auto_set_font_size(False)
+        table.set_fontsize(7)
+        table.scale(1, 1)
+        plt.subplots_adjust(left=0.2, bottom=0.3)
+        plt.xticks([]) 
+        plt.savefig('./result/report.png', dpi=300)
