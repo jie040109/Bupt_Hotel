@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "element-plus": "^2.4.3",
+    "node": "^21.2.0"
+  }
+}
