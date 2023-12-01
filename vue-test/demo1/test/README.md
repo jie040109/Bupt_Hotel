@@ -1,19 +1,5 @@
 # test
 
-## Project setup
-```
-npm install
-```
+#### 进入test目录下打开cmd
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+#### 输入npm run serve 打开给出的网址，例如http://localhost:8082/即可
