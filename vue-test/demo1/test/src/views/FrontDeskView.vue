@@ -145,6 +145,16 @@ button {
     /* 隐藏溢出的文本 */
 }
 
+button:hover {
+    background-color: rgb(252, 195, 97);
+}
+
+.button:active {
+    /* 点击时的样式 */
+    background-color: #ddd;
+    color: black;
+}
+
 .output-section {
     background-color: rgba(255, 255, 255, 0.244);
     border: 1px solid #ccc;

@@ -186,10 +186,12 @@ button {
   /* 鼠标悬停时的光标样式 */
 }
 
-/* 调整后的样式确保了账号和密码输入框在视觉上的一致性 */
+.button:active {
+  /* 点击时的样式 */
+  background-color: #ddd;
+  color: black;
+}
 
-
-/* 为了响应不同屏幕尺寸，可以使用媒体查询来调整宽度 */
 @media (max-width: 768px) {
 
   input[type="text"],
