@@ -6,7 +6,7 @@
         <img src="../assets/icon.png" alt="Icon" class="icon" />
       </div> -->
             <div class="title-container">
-                <div class="title">Room{{ id }}</div>
+                <div class="title">{{ id }}</div>
             </div>
             <button @click="toggleButton" class="toggle-button circle" :class="{ 'active-button': !isLocked }">{{ buttonText
             }}</button>
