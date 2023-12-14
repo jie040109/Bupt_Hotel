@@ -13,7 +13,7 @@
             <button class="cold" v-on:click="setMode('cold')" :class="{ active: isCold, 'cold': true }">冷</button>
             <!--button-- class="init" v-on:click="initRooms">初始化</!--button-->
         </div>
-        <button class="init" v-on:click="initRooms">初始化</button>
+        <button class="init" v-on:click="initRooms">开机</button>
         <div class="queue-container">
             <div class="queue-box" id="waiting-queue">
                 <h3>Waiting Queue</h3>
@@ -47,13 +47,7 @@ export default {
     },
     data() {
         return {
-            rooms: [
-                { id: 1, number: 'Room1', state: 'Off', temperature: 22, windSpeed: 'Low' },
-                { id: 2, number: 'Room2', state: 'On', temperature: 24, windSpeed: 'Medium' },
-                { id: 3, number: 'Room3', state: 'Off', temperature: 21, windSpeed: 'High' },
-                { id: 4, number: 'Room4', state: 'On', temperature: 26, windSpeed: 'Low' },
-                { id: 5, number: 'Room5', state: 'Off', temperature: 20, windSpeed: 'Medium' }
-            ],
+            rooms: this.initializeRoomData(), // 使用方法来初始化房间数据
             isCold: true, // 用于控制按钮的激活状态
             isHot: false  // 控制热按钮的激活状态
         };
@@ -63,8 +57,19 @@ export default {
             this.isCold = mode === 'cold';
             this.isHot = mode === 'hot';
         },
+        initializeRoomData() {
+            // 创建一个包含初始房间数据的数组
+            return Array.from({ length: 5 }, (_, i) => ({
+                id: i + 1,
+                number: `Room${i + 1}`,
+                state: 'Off',
+                temperature: 'N/A',
+                windSpeed: 'N/A'
+            }));
+        },
         initRooms() {
-            // 初始化房间的逻辑
+            // 将房间重置为初始状态
+            this.rooms = this.initializeRoomData();
         },
     },
 
