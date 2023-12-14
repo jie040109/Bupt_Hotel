@@ -31,9 +31,8 @@
 </template>
 
 
-
-
 <script>
+import {admin_getrecords, admin_getbills} from "@/admin";
 export default {
     data() {
         return {
@@ -46,15 +45,25 @@ export default {
     methods: {
         generateBill() {
             // 生成账单的逻辑
-            this.billContent = "账单内容..."; // 这里你可以添加真实的逻辑
+            if (this.selectedRoomForBill) {
+                const roomId = parseInt(this.selectedRoomForBill, 10)
+                const response = admin_getbills(roomId);
+                this.billContent = response.data; // 这里你可以添加真实的逻辑
+            }
         },
         generateDetails() {
             // 生成详单的逻辑
-            this.detailsContent = "详单内容..."; // 同样，添加真实的逻辑
+            if (this.selectedRoomForDetails) {
+                const roomId = parseInt(this.selectedRoomForDetails, 10)
+                const response = admin_getrecords(roomId);
+                this.detailsContent = response.data; // 同样，添加真实的逻辑
+            }
         }
     }
 }
 </script>
+
+
 
 <style scoped>
 .icon {

@@ -65,7 +65,10 @@
     </div>
 </template>
 
+
 <script>
+import { request_on ,request_off,request_temp,request_speed} from '@/schedule';
+import { user_show } from '@/user';
 export default {
     props: ['id'],
     data() {
@@ -83,21 +86,25 @@ export default {
             if (this.buttonText === '关') {
                 this.isLocked = false;
                 // 当切换为“开”时的额外逻辑
+                request_on(this.id);
             } else {
                 this.isLocked = true;
                 // 当切换为“关”时的额外逻辑
                 this.resetState();
+                request_off(this.id);
             }
             this.buttonText = this.buttonText === '开' ? '关' : '开';
         },
         setWindSpeed(speed) {
             if (!this.isLocked) {
                 this.windSpeed = speed;
+                request_speed(this.id, speed);
             }
         },
         updateTemperature() {
             if (!this.isLocked) {
                 this.mode = this.temperature + '°C';
+                request_temp(this.id, this.temperature);
             }
         },
         resetState() {
@@ -107,9 +114,23 @@ export default {
             this.temperature = 0;
             this.consumption = 'xx';
         },
+        updateState() {
+            if (!this.isLocked) {
+                const response = user_show(this.id);
+                this.windSpeed = response.windSpeed;
+                this.mode = response.mode;
+                this.temperature = response.temperature;
+                this.consumption = response.consumption;
+            }
+        }
     },
+    created() {
+        setInterval(this.updateState, 5000);
+    }
 };
 </script>
+
+
 
 <style scoped>
 .toggle-button:hover {

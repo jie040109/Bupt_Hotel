@@ -29,17 +29,9 @@
 
 <script>
 import Room from '@/components/Room.vue';
-// 设置最小窗口宽度
-const minWidth = 1100;
+import {admin_create, admin_modify} from "@/admin";
+import {power_on} from "@/schedule";
 
-// 当窗口大小改变时触发
-window.onresize = () => {
-    // 如果窗口宽度小于最小宽度
-    if (window.innerWidth < minWidth) {
-        // 将窗口宽度设置为最小宽度
-        window.resizeTo(minWidth, window.innerHeight);
-    }
-}
 export default {
     name: 'ControlRoomView',
     components: {
@@ -55,7 +47,8 @@ export default {
                 { id: 5, number: 'Room5', state: 'Off', temperature: 20, windSpeed: 'Medium' }
             ],
             isCold: true, // 用于控制按钮的激活状态
-            isHot: false  // 控制热按钮的激活状态
+            isHot: false,  // 控制热按钮的激活状态
+            intervalId: null
         };
     },
     methods: {
@@ -63,11 +56,24 @@ export default {
             this.isCold = mode === 'cold';
             this.isHot = mode === 'hot';
         },
-        initRooms() {
-            // 初始化房间的逻辑
-        },
+        updateRooms() {
+            for (let room of this.rooms) {
+                const response = admin_modify(room.id, room.state, room.temperature, room.windSpeed);
+                room.state = response.state;
+                room.temperature = response.temperature;
+                room.windSpeed = response.windSpeed;
+            }
+        }
     },
-
+    created() {
+        for (let room of this.rooms) {
+            power_on(room.id);
+        }
+        this.intervalId = setInterval(this.updateRooms, 5000);
+    },
+    beforeDestroy() {
+        clearInterval(this.intervalId);
+    }
 };
 </script>
 

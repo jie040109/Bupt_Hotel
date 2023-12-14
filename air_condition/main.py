@@ -7,8 +7,8 @@ from routers import (
 app = FastAPI()
 
 origins = [
-    "http://localhost",
-    "http://localhost:3100"
+    "http://localhost:8080/",
+    "http://10.29.80.241:8080/"
 ]
 
 app.add_middleware(

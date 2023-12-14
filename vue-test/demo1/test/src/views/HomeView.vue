@@ -48,6 +48,8 @@
 </template>
 
 <script>
+import {admin_login} from "@/admin";
+import {user_login} from "@/user";
 export default {
   data() {
     return {
@@ -62,15 +64,33 @@ export default {
       // 当身份更改时，可以在这里执行特定操作
     },
     submit() {
-      // 根据选择的身份跳转到相应页面
-      if (this.identity === 'customer') {
+      // 如果身份是管理员，尝试登录
+      if (this.identity === 'administrator') {
+        admin_login(this.password)
+          .then(() => {
+            // 登录成功，跳转到控制室页面
+            this.$router.push('/control-room');
+          })
+          .catch(error => {
+            // 登录失败，处理错误
+            console.error(error);
+          });
+      } else if (this.identity === 'customer') {
+         user_login(this.account, this.password)
+          .then(() => {
+            // 登录成功，跳转到房间页面
+            this.$router.push(`/room/${this.room}`);
+          })
+          .catch(error => {
+            // 登录失败，处理错误
+            console.error(error);
+          });
+        // 如果身份是客户，跳转到房间页面
         this.$router.push(`/room/${this.room}`);
       } else if (this.identity === 'front_desk') {
+        // 如果身份是前台，跳转到前台页面
         this.$router.push('/front-desk');
-      } else if (this.identity === 'administrator') {
-        this.$router.push('/control-room');
       }
-      // 这里应该还有一段验证账号密码的逻辑
     }
   }
 }
