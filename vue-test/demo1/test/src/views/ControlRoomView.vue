@@ -18,10 +18,12 @@
             <div class="queue-box" id="waiting-queue">
                 <h3>Waiting Queue</h3>
                 <!-- Waiting Queue 的内容 -->
+                <p> {{ waitingQueue }}</p>
             </div>
             <div class="queue-box" id="serving-queue">
                 <h3>Serving Queue</h3>
                 <!-- Serving Queue 的内容 -->
+                <p> {{ servingQueue }}</p>
             </div>
         </div>
     </div>
@@ -31,6 +33,7 @@
 import Room from '@/components/Room.vue';
 import {admin_create, admin_modify} from "@/admin";
 import {power_on} from "@/schedule";
+import { show } from '@/schedule';
 // 设置最小窗口宽度
 const minWidth = 1100;
 

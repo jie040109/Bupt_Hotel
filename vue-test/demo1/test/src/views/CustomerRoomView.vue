@@ -34,17 +34,17 @@
                     <div class="section-content">
                         <div class="top-content">
                             <span>风速：</span>
-                            <button @click="setWindSpeed('高')" class="circle"
+                            <button @click="setWindSpeed('high')" class="circle"
                                 :class="{ 'active-button': !isLocked }">高</button>
-                            <button @click="setWindSpeed('中')" class="circle"
+                            <button @click="setWindSpeed('medium')" class="circle"
                                 :class="{ 'active-button': !isLocked }">中</button>
-                            <button @click="setWindSpeed('低')" class="circle"
+                            <button @click="setWindSpeed('low')" class="circle"
                                 :class="{ 'active-button': !isLocked }">低</button>
                         </div>
                         <div class="bottom-content">
                             温度：
                             <input v-model="temperature" type="number" class="temperature-input" />
-                            <button @click="updateTemperature" class="circle" :disabled="isLocked"
+                            <button @click="updateTemperature(temperature)" class="circle" :disabled="isLocked"
                                 :class="{ 'active-button': !isLocked }">确定</button>
                         </div>
                     </div>
@@ -79,6 +79,7 @@ export default {
             temperature: 0,
             consumption: 'xx',
             isLocked: true,
+            timerId: null
         };
     },
     methods: {
@@ -105,11 +106,11 @@ export default {
                 request_speed(roomId, speed);
             }
         },
-        updateTemperature() {
+        updateTemperature(temperature) {
             if (!this.isLocked) {
-                this.mode = this.temperature + '°C';
+                this.temperature = parseInt(temperature);
                 const roomId = parseInt(this.id.slice(-1), 10);
-                request_temp(roomId, this.temperature);
+                request_temp(roomId, temperature);
             }
         },
         resetState() {
@@ -119,19 +120,28 @@ export default {
             this.temperature = 0;
             this.consumption = 'xx';
         },
-        updateState() {
+        async updateState() {
             if (!this.isLocked) {
                 const roomId = parseInt(this.id.slice(-1), 10);
-                const response = user_show(roomId);
-                this.windSpeed = response.windSpeed;
-                this.mode = response.mode;
-                this.temperature = response.temperature;
-                this.consumption = response.consumption;
+                const response =  await user_show(roomId);
+                console.log(response);
+                this.temperature = response.data[0];
+                this.windSpeed = response.data[1];
+                //this.mode = response.mode;
+                this.consumption = response.data[2];
             }
         }
     },
     created() {
-        setInterval(this.updateState, 5000);
+        this.timerId = setInterval(() => {
+            this.updateState();
+        }, 5000);},
+
+    beforeDestroy() {
+        if (this.timerId){
+            clearInterval(this.timerId);
+        }
+        
     }
 };
 </script>
