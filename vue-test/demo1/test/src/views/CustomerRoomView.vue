@@ -86,25 +86,30 @@ export default {
             if (this.buttonText === '关') {
                 this.isLocked = false;
                 // 当切换为“开”时的额外逻辑
-                request_on(this.id);
+
+                const roomId = parseInt(this.id.slice(-1), 10);
+                request_on(roomId);
             } else {
                 this.isLocked = true;
                 // 当切换为“关”时的额外逻辑
                 this.resetState();
-                request_off(this.id);
+                const roomId = parseInt(this.id.slice(-1), 10);
+                request_off(roomId);
             }
             this.buttonText = this.buttonText === '开' ? '关' : '开';
         },
         setWindSpeed(speed) {
             if (!this.isLocked) {
                 this.windSpeed = speed;
-                request_speed(this.id, speed);
+                const roomId = parseInt(this.id.slice(-1), 10);
+                request_speed(roomId, speed);
             }
         },
         updateTemperature() {
             if (!this.isLocked) {
                 this.mode = this.temperature + '°C';
-                request_temp(this.id, this.temperature);
+                const roomId = parseInt(this.id.slice(-1), 10);
+                request_temp(roomId, this.temperature);
             }
         },
         resetState() {
@@ -116,7 +121,8 @@ export default {
         },
         updateState() {
             if (!this.isLocked) {
-                const response = user_show(this.id);
+                const roomId = parseInt(this.id.slice(-1), 10);
+                const response = user_show(roomId);
                 this.windSpeed = response.windSpeed;
                 this.mode = response.mode;
                 this.temperature = response.temperature;

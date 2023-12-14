@@ -31,7 +31,17 @@
 import Room from '@/components/Room.vue';
 import {admin_create, admin_modify} from "@/admin";
 import {power_on} from "@/schedule";
+// 设置最小窗口宽度
+const minWidth = 1100;
 
+// 当窗口大小改变时触发
+window.onresize = () => {
+    // 如果窗口宽度小于最小宽度
+    if (window.innerWidth < minWidth) {
+        // 将窗口宽度设置为最小宽度
+        window.resizeTo(minWidth, window.innerHeight);
+    }
+}
 export default {
     name: 'ControlRoomView',
     components: {
@@ -39,10 +49,9 @@ export default {
     },
     data() {
         return {
-            rooms: this.initializeRoomData(), // 使用方法来初始化房间数据
+            rooms: [], // 初始化为空数组
             isCold: true, // 用于控制按钮的激活状态
-            isHot: false,  // 控制热按钮的激活状态
-            intervalId: null
+            isHot: false  // 控制热按钮的激活状态
         };
     },
     methods: {
@@ -50,26 +59,27 @@ export default {
             this.isCold = mode === 'cold';
             this.isHot = mode === 'hot';
         },
-
-        updateRooms() {
-            for (let room of this.rooms) {
-                const response = admin_modify(room.id, room.state, room.temperature, room.windSpeed);
-                room.state = response.state;
-                room.temperature = response.temperature;
-                room.windSpeed = response.windSpeed;
-            }
-        }
-
+        initializeRoomData() {
+            // 创建一个包含初始房间数据的数组
+            return Array.from({ length: 5 }, (_, i) => ({
+                id: i + 1,
+                number: `Room${i + 1}`,
+                state: 'Off',
+                temperature: 'N/A',
+                windSpeed: 'N/A'
+            }));
+        },
+        initRooms() {
+            // 将房间重置为初始状态
+            this.rooms = this.initializeRoomData();
+        },
     },
     created() {
-        for (let room of this.rooms) {
-            power_on(room.id);
-        }
-        this.intervalId = setInterval(this.updateRooms, 5000);
+        // 在组件创建时初始化房间
+        this.initRooms();
+        // 调用 power_on 函数
+        power_on();
     },
-    beforeDestroy() {
-        clearInterval(this.intervalId);
-    }
 };
 </script>
 

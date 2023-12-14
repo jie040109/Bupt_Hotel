@@ -28,7 +28,7 @@ export function request_off(p1) {
 }
 
 export function request_temp(p1,p2) {
-  return request.post('/api/schedule/request_modify', null, {
+  return request.post('/api/schedule/request_temp', null, {
     params: {
         room_id: p1,
         target_temperature: p2,
@@ -37,7 +37,7 @@ export function request_temp(p1,p2) {
 }
 
 export function request_speed(p1,p2) {
-  return request.post('/api/schedule/request_modify', null, {
+  return request.post('/api/schedule/request_speed', null, {
     params: {
         room_id: p1,
         fan_speed: p2,
