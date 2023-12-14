@@ -5,11 +5,11 @@
             <div class="output-section" id="bill-output">{{ billContent }}</div>
             <div class="controls">
                 <select v-model="selectedRoomForBill">
-                    <option value="room1">Room1</option>
-                    <option value="room2">Room2</option>
-                    <option value="room3">Room3</option>
-                    <option value="room4">Room4</option>
-                    <option value="room5">Room5</option>
+                    <option value="1">Room1</option>
+                    <option value="2">Room2</option>
+                    <option value="3">Room3</option>
+                    <option value="4">Room4</option>
+                    <option value="5">Room5</option>
                 </select>
                 <button @click="generateBill">生成账单</button>
             </div>
@@ -18,11 +18,11 @@
             <div class="output-section" id="details-output">{{ detailsContent }}</div>
             <div class="controls">
                 <select v-model="selectedRoomForDetails">
-                    <option value="room1">Room1</option>
-                    <option value="room2">Room2</option>
-                    <option value="room3">Room3</option>
-                    <option value="room4">Room4</option>
-                    <option value="room5">Room5</option>
+                    <option value="1">Room1</option>
+                    <option value="2">Room2</option>
+                    <option value="3">Room3</option>
+                    <option value="4">Room4</option>
+                    <option value="5">Room5</option>
                 </select>
                 <button @click="generateDetails">生成详单</button>
             </div>
@@ -32,7 +32,10 @@
 
 
 <script>
+
 import {admin_getrecords, admin_getbills} from "@/admin";
+
+
 export default {
     data() {
         return {
@@ -44,20 +47,25 @@ export default {
     },
     methods: {
         generateBill() {
+
             // 生成账单的逻辑
             if (this.selectedRoomForBill) {
                 const roomId = parseInt(this.selectedRoomForBill, 10)
                 const response = admin_getbills(roomId);
                 this.billContent = response.data; // 这里你可以添加真实的逻辑
             }
+
         },
+
         generateDetails() {
+
             // 生成详单的逻辑
             if (this.selectedRoomForDetails) {
                 const roomId = parseInt(this.selectedRoomForDetails, 10)
                 const response = admin_getrecords(roomId);
                 this.detailsContent = response.data; // 同样，添加真实的逻辑
             }
+
         }
     }
 }
