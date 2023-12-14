@@ -1,4 +1,4 @@
-from fastapi import Depends,  APIRouter
+from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
 from sql_app import models
 from sql_app.database import get_db, SessionLocal
@@ -376,3 +376,73 @@ def show(db: Session = Depends(get_db)):
     
     return service_id_list,waiting_id_list
 
+'''
+def schedule(self,db: Session = Depends(get_db)):
+    # 服务队列：先按风速排序，风速相同的情况先入先出
+    # 等待队列：先入先出的时间片调度
+
+    priority_scheduling()
+    if len(waiting_queue) != 0 and len(service_queue) == 3:
+        temp = service_queue[0]
+        temp.status='WAITING'
+        service_queue.remove(temp)
+        waiting_queue.append(temp)
+
+        # 结束一个详单
+        db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == temp.record_id).first()
+        db_record.end_time=datetime.now()
+        db_record.duration=(db_record.end_time-db_record.start_time).seconds
+        db_record.current_cost=temp.total_cost-db_record.current_cost
+        db.commit()
+
+        # 新建一个详单
+        db_record = models.ServiceRecord(room_id=temp.room_id, request_time=datetime.now(), fan_speed=temp.fan_speed,current_cost=temp.total_cost)
+        db_room=db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+        db_room.record_id=db_record.record_id
+        temp.record_id=db_record.record_id
+        db_room.status='WAITING'
+        # 写入数据库
+        db.add(db_record)
+        db.commit()
+
+        temp = waiting_queue[0]
+        temp.status='SERVING'
+        waiting_queue.remove(temp)
+        service_queue.append(temp)
+
+        db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+        db_room.status='SERVING'
+
+        # 更新一个详单
+        db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == temp.record_id).first()
+        db_record.start_time=datetime.now()
+        db.commit()
+
+    elif len(waiting_queue) != 0 and len(service_queue) == 2:
+        temp = waiting_queue[0]
+        temp.status='SERVING'
+        waiting_queue.remove(temp)
+        service_queue.append(temp)
+        # 更新一个详单
+        db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == temp.record_id).first()
+        db_record.start_time=datetime.now()
+        db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+        db_room.status='SERVING'
+        db.commit()
+
+    elif len(waiting_queue) != 0 and len(service_queue) <= 1:
+        for temp in waiting_queue:
+                temp.status='SERVING'
+                waiting_queue.remove(temp)
+                service_queue.append(temp)
+                # 更新一个详单
+                db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == temp.record_id).first()
+                db_record.start_time=datetime.now()
+                db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+                db_room.status='SERVING'
+                db.commit()
+    
+    priority_scheduling()
+    timer = threading.Timer(20, self.schedule)  # 每20s执行一次调度函数
+    timer.start()
+'''

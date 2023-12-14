@@ -23,12 +23,12 @@ def get_rooms(db: Session = Depends(get_db)):
     return db.query(models.Room).all()
 
 # 管理员获取特定房间信息
-@router.get("/{room_id}")
+@router.get("/rooms/")
 def get_room(room_id: int, db: Session = Depends(get_db)):
     db_room = db.query(models.Room).filter(models.Room.room_id == room_id).first()
     if db_room is None:
         raise HTTPException(status_code=400, detail="房间不存在")
-    return db_room
+    return [db_room]
 
 # 管理员修改房间信息(房间目标温度、风速、状态)
 @router.post("/modify")
@@ -50,7 +50,7 @@ def get_records(room_id: int, db: Session = Depends(get_db)):
 # 管理员获取特定房间的账单
 @router.get("/bills/{room_id}")
 def get_bills(room_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Bill).filter(models.Bill.room_id == room_id).all()
+    return db.query(models.Bill).filter(models.Bill.room_id == room_id).order_by(models.Bill.bill_id.desc()).first()
 
 # 管理员创建房间(房间号、身份证号、初始温度)，同时创建账单
 @router.post("/create")
@@ -73,7 +73,8 @@ def delete_room(room_id: int, db: Session = Depends(get_db)):
     if db_room is None:
         raise HTTPException(status_code=400, detail="房间不存在")
     db.delete(db_room)
-    db_bill = db.query(models.Bill).filter(models.Bill.room_id == room_id).first()
+    # 返回最后一个账单
+    db_bill = db.query(models.Bill).filter(models.Bill.room_id == room_id).order_by(models.Bill.bill_id.desc()).first()
     db_bill.checkout_time = datetime.now()
     db_bill.total_cost = db_room.total_cost
     db.commit()
