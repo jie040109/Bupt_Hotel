@@ -4,6 +4,7 @@ import HomeView from '../views/HomeView.vue'
 import CustomerRoomView from '../views/CustomerRoomView.vue'
 import FrontDeskView from '../views/FrontDeskView.vue'
 import ControlRoomView from '../views/ControlRoomView.vue'
+import CreateRoomView from '../views/CreateRoomView.vue'
 
 const routes = [
   {
@@ -34,6 +35,11 @@ const routes = [
     path: '/control-room',
     name: 'controlRoom',
     component: ControlRoomView
+  },
+  {
+    path: '/create-room',
+    name: 'createRoom',
+    component: CreateRoomView
   }
 ]
 

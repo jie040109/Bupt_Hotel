@@ -13,6 +13,7 @@
             <button class="cold" v-on:click="setMode('cold')" :class="{ active: isCold, 'cold': true }">冷</button>
             <!--button-- class="init" v-on:click="initRooms">初始化</!--button-->
         </div>
+        <router-link to="/create-room" class="create" v-on:click="initRooms">创建房间</router-link>
         <button class="init" v-on:click="initRooms">开机</button>
         <div class="queue-container">
             <div class="queue-box" id="waiting-queue">
@@ -31,8 +32,8 @@
 
 <script>
 import Room from '@/components/Room.vue';
-import {admin_create, admin_modify} from "@/admin";
-import {power_on} from "@/schedule";
+import { admin_create, admin_modify } from "@/admin";
+import { power_on } from "@/schedule";
 import { show } from '@/schedule';
 // 设置最小窗口宽度
 const minWidth = 1100;
@@ -54,17 +55,13 @@ export default {
         return {
             rooms: [], // 初始化为空数组
             isCold: true, // 用于控制按钮的激活状态
-            isHot: false ,// 控制热按钮的激活状态
-            waitingQueue: [],
-            servingQueue: [],
-            refreshInterval: null,
+            isHot: false  // 控制热按钮的激活状态
         };
     },
     methods: {
         setMode(mode) {
             this.isCold = mode === 'cold';
             this.isHot = mode === 'hot';
-           
         },
         initializeRoomData() {
             // 创建一个包含初始房间数据的数组
@@ -76,40 +73,17 @@ export default {
                 windSpeed: 'N/A'
             }));
         },
-        async updateQueues() {
-        try {
-            // 更新 Waiting Queue 和 Serving Queue 的内容
-            const response = await show();
-            //console.log(response);
-            this.waitingQueue = response.data[0];
-            this.servingQueue = response.data[1];
-            //console.log(this.waitingQueue);
-            //console.log(this.servingQueue);
-            if (!this.refreshIntervalId){
-                this.refreshIntervalId = setInterval(this.updateQueues, 5000);
-            }
-            
-        } catch (error) {
-            //console.error("Failed to update queues: ", error);
-        }
-
-        },
-        watch:{
-            '$route' (){
-                clearInterval(this.refreshIntervalId);
-               
-            }
-
-
-        },
         initRooms() {
             // 将房间重置为初始状态
             this.rooms = this.initializeRoomData();
-            this.updateQueues();
         },
     },
-  
-  
+    created() {
+        // 在组件创建时初始化房间
+        this.initRooms();
+        // 调用 power_on 函数
+        power_on();
+    },
 };
 </script>
 
@@ -228,6 +202,45 @@ body {
 }
 
 .init:hover {
+    background-color: rgb(252, 195, 97);
+}
+
+.create {
+    text-decoration: none;
+    /* 取消下划线 */
+    width: 80px;
+    /* 按钮宽度与输入框相同 */
+    height: 40px;
+    /* 按钮高度 */
+    /* 按钮内边距 */
+    margin-top: 0px;
+    align-self: center;
+    /* 与上方元素的间隔 */
+    border: none;
+    /* 无边框 */
+    border-radius: 4px;
+    /* 边框圆角 */
+    background-color: white;
+    /* 背景颜色 */
+    color: black;
+    /* 字体颜色 */
+    font-size: 16px;
+    /* 字体大小 */
+    cursor: pointer;
+    /* 鼠标悬停时的光标样式 */
+    position: absolute;
+    left: 30%;
+    /* 水平居中 */
+    transform: translateX(-50%);
+    bottom: 20px;
+    /* 水平居中定位的另一部分 */
+    display: flex;
+    justify-content: center;
+    /* 水平居中对齐内部按钮 */
+    align-items: center;
+}
+
+.create:hover {
     background-color: rgb(252, 195, 97);
 }
 

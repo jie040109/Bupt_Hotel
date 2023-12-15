@@ -4,26 +4,14 @@
         <div class="control-output-container">
             <div class="output-section" id="bill-output">{{ billContent }}</div>
             <div class="controls">
-                <select v-model="selectedRoomForBill">
-                    <option value="1">Room1</option>
-                    <option value="2">Room2</option>
-                    <option value="3">Room3</option>
-                    <option value="4">Room4</option>
-                    <option value="5">Room5</option>
-                </select>
+                <input type="number" v-model="roomNumberForBill" placeholder="Enter room number">
                 <button @click="generateBill">生成账单</button>
             </div>
         </div>
         <div class="control-output-container">
             <div class="output-section" id="details-output">{{ detailsContent }}</div>
             <div class="controls">
-                <select v-model="selectedRoomForDetails">
-                    <option value="1">Room1</option>
-                    <option value="2">Room2</option>
-                    <option value="3">Room3</option>
-                    <option value="4">Room4</option>
-                    <option value="5">Room5</option>
-                </select>
+                <input type="number" v-model="roomNumberForDetails" placeholder="Enter room number">
                 <button @click="generateDetails">生成详单</button>
             </div>
         </div>
@@ -37,7 +25,7 @@
 <script>
 
 
-import {admin_getrecords, admin_getbills,admin_delete} from "@/admin";
+import { admin_getrecords, admin_getbills, admin_delete } from "@/admin";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -45,17 +33,17 @@ import { saveAs } from 'file-saver';
 export default {
     data() {
         return {
-            selectedRoomForBill: '',
-            selectedRoomForDetails: '',
             billContent: '',
-            detailsContent: ''
+            detailsContent: '',
+            roomNumberForBill: '', // 新增的输入属性
+            roomNumberForDetails: '', // 新增的输入属性
         };
     },
     methods: {
         async generateBill() {
             // 生成账单的逻辑
-            if (this.selectedRoomForBill) {
-                const roomId = parseInt(this.selectedRoomForBill, 10)
+            if (this.roomNumberForBill) {
+                const roomId = parseInt(this.roomNumberForBill, 10);
                 const response = await admin_getbills(roomId);
                 console.log(response.data);
                 this.billContent = [response.data]; // 这里你可以添加真实的逻辑
@@ -64,23 +52,23 @@ export default {
                 XLSX.utils.book_append_sheet(wb, ws, "Bills");
                 const wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
                 function s2ab(s) {
-                        const buffer = new ArrayBuffer(s.length);
-                        const view = new Uint8Array(buffer);
-                        for (let i = 0; i < s.length; i++) {
-                            view[i] = s.charCodeAt(i) & 0xFF;
-                        }
-                        return buffer;
+                    const buffer = new ArrayBuffer(s.length);
+                    const view = new Uint8Array(buffer);
+                    for (let i = 0; i < s.length; i++) {
+                        view[i] = s.charCodeAt(i) & 0xFF;
                     }
-                    const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
-                    saveAs(blob, "bills.xlsx");
-                
+                    return buffer;
                 }
-            },
+                const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
+                saveAs(blob, "bills.xlsx");
+
+            }
+        },
 
         async generateDetails() {
-            if (this.selectedRoomForDetails) {
+            if (this.roomNumberForDetails) {
                 try {
-                    const roomId = parseInt(this.selectedRoomForDetails, 10);
+                    const roomId = parseInt(this.roomNumberForDetails, 10);
                     const response = await admin_getrecords(roomId);
 
                     // 确认response.data是期望的数组格式
@@ -114,11 +102,15 @@ export default {
         checkOut() {
             // Logic for check out
             // You can implement the logic for checking out here
-        
-        admin_delete(2);
+
+            if (this.roomNumberForBill) {
+                const roomId = parseInt(this.roomNumberForBill, 10);
+                admin_delete(roomId);
+                // 你可以在此处添加更多的逻辑，例如清空输入或显示某种确认信息
+            }
 
         }
-}
+    }
 }
 </script>
 
@@ -184,7 +176,8 @@ button {
     /* 控件之间的间隔 */
 }
 
-select {
+input[type="number"] {
+    width: 50px;
     height: 30px;
     /* 选择框高度 */
     padding: 0 10px;
