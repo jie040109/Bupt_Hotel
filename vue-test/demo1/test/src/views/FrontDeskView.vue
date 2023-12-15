@@ -27,15 +27,20 @@
                 <button @click="generateDetails">生成详单</button>
             </div>
         </div>
+        <div class="checkout">
+            <button @click="checkOut">退房</button>
+        </div>
     </div>
 </template>
 
 
 <script>
 
+
 import {admin_getrecords, admin_getbills} from "@/admin";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+
 
 export default {
     data() {
@@ -105,6 +110,12 @@ export default {
                     console.error("生成详单时发生错误", error);
                 }
             }
+
+        },
+        checkOut() {
+            // Logic for check out
+            // You can implement the logic for checking out here
+
         }
 
 }
@@ -234,6 +245,13 @@ button:hover {
     font-weight: bold;
     font-feature-settings: "tnum";
     /* 字体大小 */
+}
+
+.checkout {
+    display: flex;
+    padding: 20px;
+    position: relative;
+    left: -5%;
 }
 
 @media (max-width: 768px) {
