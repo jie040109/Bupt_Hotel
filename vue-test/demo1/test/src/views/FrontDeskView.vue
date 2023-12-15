@@ -37,7 +37,7 @@
 <script>
 
 
-import {admin_getrecords, admin_getbills} from "@/admin";
+import {admin_getrecords, admin_getbills,admin_delete} from "@/admin";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -75,8 +75,7 @@ export default {
                     saveAs(blob, "bills.xlsx");
                 
                 }
-            }
-        },
+            },
 
         async generateDetails() {
             if (this.selectedRoomForDetails) {
@@ -115,11 +114,12 @@ export default {
         checkOut() {
             // Logic for check out
             // You can implement the logic for checking out here
+        
+        admin_delete(2);
 
         }
-
 }
-
+}
 </script>
 
 
@@ -264,4 +264,3 @@ button:hover {
     }
 }
 </style>
-

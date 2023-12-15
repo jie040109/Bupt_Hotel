@@ -64,7 +64,7 @@ export function admin_getbills(p1) {
 
 
 export function admin_delete(p1) {
-  return request.delete('/api/admin/delete', null, {
+  return request.delete('api/admin/delete', {
     params: {
         room_id: p1,
     },

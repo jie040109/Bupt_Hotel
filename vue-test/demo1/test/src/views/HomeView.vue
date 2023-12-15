@@ -20,9 +20,10 @@
           </select>
         </div>
 
+        <!-- 替换为手动输入房间号 -->
         <div class="form-row" v-if="identity === 'customer'">
-          <label for="account">Room_ID:</label>
-          <input id="account" type="text" v-model="account">
+          <label for="room">Room ID:</label>
+          <input id="room" type="text" v-model="room">
         </div>
 
         <div class="form-row">
@@ -32,10 +33,10 @@
 
         <button @click="submit">登录</button>
       </div>
-
     </div>
   </div>
 </template>
+
 
 <script>
 import { admin_login } from "@/admin";
@@ -44,7 +45,7 @@ export default {
   data() {
     return {
       identity: 'customer',
-      room: 'room1',
+      room: '',
       account: '',
       password: ''
     };
@@ -66,7 +67,7 @@ export default {
             console.error(error);
           });
       } else if (this.identity === 'customer') {
-        user_login(this.account, this.password)
+        user_login(this.room, this.password)
           .then(() => {
             // 登录成功，跳转到房间页面
             this.$router.push(`/room/${this.room}`);
@@ -76,7 +77,6 @@ export default {
             console.error(error);
           });
         // 如果身份是客户，跳转到房间页面
-        this.$router.push(`/room/${this.room}`);
       } else if (this.identity === 'front_desk') {
         // 如果身份是前台，跳转到前台页面
         this.$router.push('/front-desk');
@@ -130,25 +130,6 @@ export default {
   /* 可以提供一点透明度以显示背景 */
   gap: 40px;
   border-radius: 16px;
-}
-
-/* 设置输入框和下拉菜单的宽度和高度 */
-/* 设置文本和密码输入框的共通样式 */
-select {
-  width: 80%;
-  /* 或者您可以使用具体的像素值，例如：width: 300px; */
-  height: 40px;
-  /* 或根据您的设计要求调整 */
-  padding: 10px;
-  /* 文本内部的左右内边距 */
-  margin-bottom: 10px;
-  /* 控件之间的垂直间距 */
-  box-sizing: border-box;
-  /* 确保内边距和边框不会增加控件的宽度 */
-  border: 1px solid #ccc;
-  /* 控件边框样式 */
-  border-radius: 4px;
-  /* 控件边框圆角 */
 }
 
 .form-row {
@@ -221,6 +202,12 @@ button {
   /* 字体大小 */
   cursor: pointer;
   /* 鼠标悬停时的光标样式 */
+}
+
+.button:active {
+  /* 点击时的样式 */
+  background-color: #ddd;
+  color: black;
 }
 
 @media (max-width: 768px) {
