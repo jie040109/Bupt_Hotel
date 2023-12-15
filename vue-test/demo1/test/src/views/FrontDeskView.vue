@@ -34,7 +34,8 @@
 <script>
 
 import {admin_getrecords, admin_getbills} from "@/admin";
-
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 export default {
     data() {
@@ -46,29 +47,68 @@ export default {
         };
     },
     methods: {
-        generateBill() {
-
+        async generateBill() {
             // 生成账单的逻辑
             if (this.selectedRoomForBill) {
                 const roomId = parseInt(this.selectedRoomForBill, 10)
-                const response = admin_getbills(roomId);
-                this.billContent = response.data; // 这里你可以添加真实的逻辑
+                const response = await admin_getbills(roomId);
+                console.log(response.data);
+                this.billContent = [response.data]; // 这里你可以添加真实的逻辑
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(this.billContent);
+                XLSX.utils.book_append_sheet(wb, ws, "Bills");
+                const wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
+                function s2ab(s) {
+                        const buffer = new ArrayBuffer(s.length);
+                        const view = new Uint8Array(buffer);
+                        for (let i = 0; i < s.length; i++) {
+                            view[i] = s.charCodeAt(i) & 0xFF;
+                        }
+                        return buffer;
+                    }
+                    const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
+                    saveAs(blob, "bills.xlsx");
+                
+                }
             }
-
         },
 
-        generateDetails() {
-
-            // 生成详单的逻辑
+        async generateDetails() {
             if (this.selectedRoomForDetails) {
-                const roomId = parseInt(this.selectedRoomForDetails, 10)
-                const response = admin_getrecords(roomId);
-                this.detailsContent = response.data; // 同样，添加真实的逻辑
-            }
+                try {
+                    const roomId = parseInt(this.selectedRoomForDetails, 10);
+                    const response = await admin_getrecords(roomId);
 
+                    // 确认response.data是期望的数组格式
+                    console.log(response.data);
+
+                    this.detailsContent = response.data;
+
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.json_to_sheet(this.detailsContent);
+                    XLSX.utils.book_append_sheet(wb, ws, "Details");
+
+                    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
+                    function s2ab(s) {
+                        const buffer = new ArrayBuffer(s.length);
+                        const view = new Uint8Array(buffer);
+                        for (let i = 0; i < s.length; i++) {
+                            view[i] = s.charCodeAt(i) & 0xFF;
+                        }
+                        return buffer;
+                    }
+                    const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
+
+                    // 使用file-saver的saveAs方法触发文件下载
+                    saveAs(blob, "details.xlsx");
+                } catch (error) {
+                    console.error("生成详单时发生错误", error);
+                }
+            }
         }
-    }
+
 }
+
 </script>
 
 
