@@ -54,13 +54,17 @@ export default {
         return {
             rooms: [], // 初始化为空数组
             isCold: true, // 用于控制按钮的激活状态
-            isHot: false  // 控制热按钮的激活状态
+            isHot: false ,// 控制热按钮的激活状态
+            waitingQueue: [],
+            servingQueue: [],
+            refreshInterval: null,
         };
     },
     methods: {
         setMode(mode) {
             this.isCold = mode === 'cold';
             this.isHot = mode === 'hot';
+           
         },
         initializeRoomData() {
             // 创建一个包含初始房间数据的数组
@@ -72,17 +76,40 @@ export default {
                 windSpeed: 'N/A'
             }));
         },
+        async updateQueues() {
+        try {
+            // 更新 Waiting Queue 和 Serving Queue 的内容
+            const response = await show();
+            //console.log(response);
+            this.waitingQueue = response.data[0];
+            this.servingQueue = response.data[1];
+            //console.log(this.waitingQueue);
+            //console.log(this.servingQueue);
+            if (!this.refreshIntervalId){
+                this.refreshIntervalId = setInterval(this.updateQueues, 5000);
+            }
+            
+        } catch (error) {
+            //console.error("Failed to update queues: ", error);
+        }
+
+        },
+        watch:{
+            '$route' (){
+                clearInterval(this.refreshIntervalId);
+               
+            }
+
+
+        },
         initRooms() {
             // 将房间重置为初始状态
             this.rooms = this.initializeRoomData();
+            this.updateQueues();
         },
     },
-    created() {
-        // 在组件创建时初始化房间
-        this.initRooms();
-        // 调用 power_on 函数
-        power_on();
-    },
+  
+  
 };
 </script>
 
