@@ -11,45 +11,35 @@
         <h1>BUPT-Hotel</h1>
         <!-- 其余的 HomeView 内容 -->
 
-        <div>
+        <div class="form-row">
           <label for="identity">选择身份:</label>
-          <select v-model="identity" @change="onIdentityChange">
+          <select id="identity" v-model="identity" @change="onIdentityChange">
             <option value="customer">Costumer</option>
             <option value="front_desk">Front Desk</option>
             <option value="administrator">Administrator</option>
           </select>
-
-          <div v-if="identity === 'customer'">
-            <label for="room">选择房间:</label>
-            <select v-model="room">
-              <option value="room1">Room1</option>
-              <option value="room2">Room2</option>
-              <option value="room3">Room3</option>
-              <option value="room4">Room4</option>
-              <option value="room5">Room5</option>
-            </select>
-          </div>
         </div>
 
-        <div>
-          <label for="account">用户账号:</label>
-          <input type="text" v-model="account">
+        <div class="form-row" v-if="identity === 'customer'">
+          <label for="account">Room_ID:</label>
+          <input id="account" type="text" v-model="account">
         </div>
 
-        <div>
-          <label for="password">用户密码:</label>
-          <input type="password" v-model="password">
+        <div class="form-row">
+          <label for="password">Identity_card:</label>
+          <input id="password" type="password" v-model="password">
         </div>
 
         <button @click="submit">登录</button>
       </div>
+
     </div>
   </div>
 </template>
 
 <script>
-import {admin_login} from "@/admin";
-import {user_login} from "@/user";
+import { admin_login } from "@/admin";
+import { user_login } from "@/user";
 export default {
   data() {
     return {
@@ -76,7 +66,7 @@ export default {
             console.error(error);
           });
       } else if (this.identity === 'customer') {
-         user_login(this.account, this.password)
+        user_login(this.account, this.password)
           .then(() => {
             // 登录成功，跳转到房间页面
             this.$router.push(`/room/${this.room}`);
@@ -161,9 +151,35 @@ select {
   /* 控件边框圆角 */
 }
 
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.form-row label {
+  white-space: nowrap;
+  /* Ensure the label text stays on one line */
+  margin-right: 10px;
+}
+
+.form-width {
+  width: 250px;
+  /* Set the width you want for your inputs and selects */
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+
 input[type="text"],
-input[type="password"] {
-  width: 80%;
+
+input[type="password"],
+select {
+  width: 70%;
   /* 宽度充满容器 */
   height: 40px;
   /* 输入框的高度 */
@@ -177,8 +193,9 @@ input[type="password"] {
   /* 边框样式 */
   border-radius: 4px;
   /* 边框圆角 */
-  font-size: 16px;
+  font-size: 14px;
   /* 字体大小 */
+  margin-left: auto
 }
 
 /* 如果需要，也可以为按钮设置样式 */
@@ -204,12 +221,6 @@ button {
   /* 字体大小 */
   cursor: pointer;
   /* 鼠标悬停时的光标样式 */
-}
-
-.button:active {
-  /* 点击时的样式 */
-  background-color: #ddd;
-  color: black;
 }
 
 @media (max-width: 768px) {
