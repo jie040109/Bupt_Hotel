@@ -27,7 +27,7 @@
                     <div class="section-title">状态</div>
                     <div class="section-content">
                         <div class="left-content" :class="{ 'locked': isLocked }">风速：{{ windSpeed }}</div>
-                        <div class="right-content" :class="{ 'locked': isLocked }">温度：{{ temperature }}</div>
+                        <div class="right-content" :class="{ 'locked': isLocked }">温度：{{ current_temperature }}</div>
                     </div>
                 </div>
 
@@ -45,7 +45,7 @@
                                 :class="{ 'active-button': !isLocked }">低</button>
                         </div>
                         <div class="bottom-content">
-                            温度：
+                            设定温度：
                             <input v-model="temperature" type="number" class="temperature-input" />
                             <button @click="updateTemperature(temperature)" class="circle" :disabled="isLocked"
                                 :class="{ 'active-button': !isLocked }">确定</button>
@@ -80,6 +80,7 @@ export default {
             windSpeed: 'xx',
             //mode: 'xx',
             temperature: 0,
+            current_temperature: 0,
             consumption: 'xx',
             isLocked: true,
             timerId: null
@@ -117,7 +118,7 @@ export default {
                 if (!this.timerId) {
                     this.timerId = setInterval(() => {
                         this.updateState();
-                    }, 5000);
+                    }, 1000);
                 }
             }
         },
@@ -133,11 +134,11 @@ export default {
                 const roomId = parseInt(this.id.slice(-1), 10);
                 const response =  await user_show(roomId);
                 console.log(response);
-                this.mode = response.data[0].toFixed(1);
+                this.current_temperature = response.data.current_temperature.toFixed(1);
                 //this.temperature = response.data[0];
-                this.windSpeed = response.data[1];
+                this.windSpeed = response.data.fan_speed;
                 //this.mode = response.mode;
-                this.consumption = response.data[2].toFixed(2);
+                this.consumption = response.data.total_cost.toFixed(2);
             }
         }
     },

@@ -13,7 +13,7 @@
             <button class="cold" v-on:click="setMode('cold')" :class="{ active: isCold, 'cold': true }">冷</button>
             <!--button-- class="init" v-on:click="initRooms">初始化</!--button-->
         </div>
-        <router-link to="/create-room" class="create" v-on:click="initRooms">创建房间</router-link>
+        <router-link to="/create-room" class="create" >创建房间</router-link>
         <button class="init" v-on:click="initRooms">开机</button>
         <div class="queue-container">
             <div class="queue-box" id="waiting-queue">
@@ -94,12 +94,12 @@ export default {
                 // 更新 Waiting Queue 和 Serving Queue 的内容
                 const response = await show();
                 console.log(response);
-                this.waitingQueue = response.data[0];
-                this.servingQueue = response.data[1];
+                this.waitingQueue = response.data[1];
+                this.servingQueue = response.data[0];
                 //console.log(this.waitingQueue);
                 //console.log(this.servingQueue);
                 if (!this.refreshIntervalId){
-                    this.refreshIntervalId = setInterval(this.updateQueues, 5000);
+                    this.refreshIntervalId = setInterval(this.updateQueues, 1000);
                 }
                 
             } catch (error) {
@@ -124,7 +124,7 @@ export default {
             this.updateQueues();
             this.intervalId = setInterval(() => {
             this.rooms.forEach(room => this.updateRoom(room.id));
-        }, 5000);
+        }, 1000);
         },
 
 
