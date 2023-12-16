@@ -5,6 +5,9 @@
             <!-- <div class="iconpic">
         <img src="../assets/icon.png" alt="Icon" class="icon" />
       </div> -->
+            <div class="room-container">
+                    <div class="room-title">Room</div>
+            </div>
             <div class="title-container">
                 <div class="title">{{ id }}</div>
             </div>
@@ -24,7 +27,7 @@
                     <div class="section-title">状态</div>
                     <div class="section-content">
                         <div class="left-content" :class="{ 'locked': isLocked }">风速：{{ windSpeed }}</div>
-                        <div class="right-content" :class="{ 'locked': isLocked }">模式：{{ mode }}</div>
+                        <div class="right-content" :class="{ 'locked': isLocked }">温度：{{ temperature }}</div>
                     </div>
                 </div>
 
@@ -75,7 +78,7 @@ export default {
         return {
             buttonText: '关',
             windSpeed: 'xx',
-            mode: 'xx',
+            //mode: 'xx',
             temperature: 0,
             consumption: 'xx',
             isLocked: true,
@@ -121,7 +124,7 @@ export default {
         resetState() {
             // 当切换为“关”时的重置状态逻辑
             this.windSpeed = 'xx';
-            this.mode = 'xx';
+            //this.mode = 'xx';
             this.temperature = 0;
             this.consumption = 'xx';
         },
@@ -188,6 +191,7 @@ export default {
     align-items: center;
     padding: 20px;
     margin-left: 47px;
+    width: auto;
 }
 
 .locked {
@@ -208,15 +212,28 @@ export default {
   width: 70px;
 } */
 
+.room-container {
+    flex: 0.9;
+    /* 填充剩余空间 */
+    text-align: right;
+}
+
+.room-title {
+    font-size: 30px;
+    font-weight: bold;
+    margin-left: 40px;  /* 没用 */
+}
+
 .title-container {
     flex: 0.9;
     /* 填充剩余空间 */
-    text-align: center;
+    text-align: left;
 }
 
 .title {
     font-size: 30px;
     font-weight: bold;
+    margin-left: 40px;
 }
 
 .toggle-button {

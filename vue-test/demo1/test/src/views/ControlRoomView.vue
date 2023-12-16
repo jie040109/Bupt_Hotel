@@ -394,5 +394,22 @@ body {
     border-radius: 5px;
 
     /* 文字大小 */
-}
+    flex-direction: column; /* 垂直排列子元素 */
+    align-items: center; /* 居中子元素 */
+    text-align: center; /* 文本居中 */
+    }
+
+  #waiting-queue h3 {
+    margin-bottom: 10px; /* 底部外边距 */
+  }
+  #waiting-queue p {
+    font-size: 1.2em; /* 字体大小 */
+  }
+
+  #serving-queue h3 {
+    margin-bottom: 10px; 
+  }
+  #serving-queue p {
+    font-size: 1.2em; 
+  }
 </style>
