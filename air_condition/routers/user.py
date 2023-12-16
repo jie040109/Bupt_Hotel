@@ -23,5 +23,5 @@ def show(room_id: int, db: Session = Depends(get_db)):
     db_room = db.query(models.Room).filter(models.Room.room_id == room_id).first()
     if db_room is None:
         raise HTTPException(status_code=400, detail="房间不存在")
-    return db_room.current_temperature,db_room.fan_speed,db_room.total_cost
+    return {"current_temperature": db_room.current_temperature,'fan_speed':db_room.fan_speed,'total_cost':db_room.total_cost}
 

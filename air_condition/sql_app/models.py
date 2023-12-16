@@ -1,4 +1,4 @@
-from sqlalchemy import  Column, ForeignKey, Integer,Float, String, Enum, DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, Integer,Float, String, Enum, DateTime
 from datetime import datetime
 from .database import Base, engine
 

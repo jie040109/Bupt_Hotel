@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sql_app import models
 from sql_app.database import get_db, SessionLocal
 from datetime import datetime
+import time
 import threading
 
 class RoomData:
@@ -18,12 +19,13 @@ class RoomData:
         self.server_time = db_room.server_time
         self.total_cost = db_room.total_cost
 
-db = SessionLocal()
+# db = SessionLocal()
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
 
 # 服务队列
 service_queue = []
+
 
 # 等待队列
 waiting_queue = []
@@ -46,6 +48,9 @@ def priority_scheduling(db):
     # 等待队列中的对象按照优先级从高到低排序
 
     # 定义一个字典，将风扇速度的字符串映射为相应的整数值
+
+    global service_queue,waiting_queue,room_queue
+
     speed_mapping = {'high': 3, 'medium': 2, 'low': 1}
 
     room_queue.sort(key=lambda x: speed_mapping[x.fan_speed], reverse=True)
@@ -53,35 +58,42 @@ def priority_scheduling(db):
     service_queue.sort(key=lambda x: speed_mapping[x.fan_speed])
 
     if(len(service_queue)<3 and len(waiting_queue)!=0):
-        for room in waiting_queue:
+        for room in waiting_queue.copy():
             if(len(service_queue)<3):
-                temp=room
-                waiting_queue.remove(temp)
-                service_queue.append(temp)
-                temp.status='SERVING'
-                db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
-                db_room.status='SERVING'
-                db.commit()
+                for temp in waiting_queue :
+                    if temp==room:
+                        waiting_queue.remove(temp)
+                        service_queue.append(temp)
+                        temp.status='SERVING'
+                        db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+                        db_room.status='SERVING'
+                        db.commit()
+                        break
             else:
                 break
 
-    for room in room_queue:
-        for service in service_queue:
+    for room in waiting_queue.copy():
+        for service in service_queue.copy():
             if(room.status=='WAITING'and speed_mapping[room.fan_speed] > speed_mapping[service.fan_speed]):
-                temp=service
-                service_queue.remove(temp)
-                waiting_queue.append(temp)
-                temp.status='WAITING'
-                db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
-                db_room.status='WAITING'
+                for temp in service_queue:
+                    if temp==service:
+                        service_queue.remove(temp)
+                        waiting_queue.append(temp)
+                        temp.status='WAITING'
+                        db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+                        db_room.status='WAITING'
+                        db.commit()
+                        break
                 
-                temp = room
-                waiting_queue.remove(temp)
-                service_queue.append(temp)
-                temp.status='SERVING'
-                db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
-                db_room.status='SERVING'
-                db.commit()
+                for temp in waiting_queue:
+                    if temp==room:
+                        waiting_queue.remove(temp)
+                        service_queue.append(temp)
+                        temp.status='SERVING'
+                        db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+                        db_room.status='SERVING'
+                        db.commit()
+                        break
                 break
 
 def time_slicing(db):
@@ -90,54 +102,90 @@ def time_slicing(db):
     # 定义一个字典，将风扇速度的字符串映射为相应的整数值
     speed_mapping = {'high': 3, 'medium': 2, 'low': 1}
 
-    if(len(service_queue)==3):
-        for room in service_queue:
-            for wait in waiting_queue:
-                if room.server_time>=20 and speed_mapping[room.fan_speed] == speed_mapping[wait.fan_speed]:
-                    temp=room
-                    service_queue.remove(temp)
-                    waiting_queue.append(temp)
-                    temp.status='WAITING'
-                    db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
-                    db_room.status='WAITING'
+    global service_queue,waiting_queue,room_queue
 
-                    temp = wait
-                    waiting_queue.remove(temp)
-                    service_queue.append(temp)
-                    temp.status='SERVING'
-                    db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
-                    db_room.status='SERVING'
-                    db.commit()
+    if(len(service_queue)==3 and len(waiting_queue)!=0):
+        for room in service_queue.copy():
+            for wait in waiting_queue.copy():
+                if room.server_time>=20 and speed_mapping[room.fan_speed] == speed_mapping[wait.fan_speed]:
+                    for temp in service_queue:
+                        if temp==room:
+                            service_queue.remove(temp)
+                            waiting_queue.append(temp)
+                            temp.status='WAITING'
+                            db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+                            db_room.status='WAITING'
+                            db.commit()
+                            break
+
+                    for temp in waiting_queue:
+                        if temp==wait:
+                            waiting_queue.remove(temp)
+                            service_queue.append(temp)
+                            temp.status='SERVING'
+                            db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+                            db_room.status='SERVING'
+                            db.commit()
+                            break
                     break
 
 def schedule(db):
     # 服务队列：先按风速排序，风速相同的情况先入先出
     # 等待队列：先入先出的时间片调度
 
+    global service_queue,waiting_queue,room_queue
     temp_queue=service_queue.copy()
 
     priority_scheduling(db)
+
+    # service_id_list=[]
+    # service_time_list=[]
+    # for service in service_queue:
+    #     service_id_list.append(service.room_id)
+    #     service_time_list.append(service.server_time)
+    # waiting_id_list=[]
+    # waiting_time_list=[]
+    # for wait in waiting_queue:
+    #     waiting_id_list.append(wait.room_id)
+    #     waiting_time_list.append(wait.server_time)
+
+    # print(service_id_list,waiting_id_list)
+    # print(service_time_list,waiting_time_list)
+        
     time_slicing(db)
+
+    # service_id_list=[]
+    # for service in service_queue:
+    #     service_id_list.append(service.room_id)
+    # waiting_id_list=[]
+    # for wait in waiting_queue:
+    #     waiting_id_list.append(wait.room_id)
+    # print(service_id_list,waiting_id_list)
+
     priority_scheduling(db)
 
-    for temp in temp_queue:
-        if temp.status=='WAITING':
-            # 结束一个详单
-            db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == temp.record_id).first()
-            db_record.end_time=datetime.now()
-            db_record.duration=(datetime.now()-db_record.start_time).seconds
-            db_record.current_cost=temp.total_cost-db_record.current_cost
-            db.commit()
-            # 新建一个详单
-            db_record = models.ServiceRecord(room_id=temp.room_id, request_time=datetime.now(), fan_speed=temp.fan_speed,current_cost=temp.total_cost)
-            db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
-            db_room.server_time=0;
-            temp.server_time=0;
-            db.add(db_record)
-            db.commit()
-            db_room.record_id=db_record.record_id
-            temp.record_id=db_record.record_id
-            db.commit()
+    for room in temp_queue:
+        if room.status=='WAITING':
+            for temp in room_queue:
+                if temp==room:
+                    # 结束一个详单
+                    db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == temp.record_id).first()
+                    db_record.end_time=datetime.now()
+                    db_record.duration=temp.server_time
+                    db_record.current_cost=temp.total_cost-db_record.current_cost
+                    db.commit()
+                    # 新建一个详单
+                    db_record = models.ServiceRecord(room_id=temp.room_id, request_time=datetime.now(), fan_speed=temp.fan_speed,current_cost=temp.total_cost)
+                    db_room = db.query(models.Room).filter(models.Room.room_id == temp.room_id).first()
+                    db_room.server_time=0
+                    temp.server_time=0
+                    db.add(db_record)
+                    db.commit()
+                    db_room.record_id=db_record.record_id
+                    temp.record_id=db_record.record_id
+                    db.commit()
+                    break
+        
     for service in service_queue:
         service.server_time+=10
         db_room = db.query(models.Room).filter(models.Room.room_id == service.room_id).first()
@@ -149,50 +197,53 @@ def schedule(db):
             db_record.start_time=datetime.now()
             db.commit()
 
-    timer = threading.Timer(10, schedule,args=(db,))  # 每10s执行一次调度函数
-    timer.start()
+    # timer = threading.Timer(10, schedule,args=(db,))  # 每10s执行一次调度函数
+    # timer.start()
+
 
 # 遍历所有房间，计算费用
 def calculate_cost(db):
+    global service_queue,waiting_queue,room_queue
     for room in room_queue:
         db_room = db.query(models.Room).filter(models.Room.room_id == room.room_id).first()
         if room.status=='SERVING':
             if room.fan_speed=='high':
-                room.total_cost+=0.1
-                room.current_temperature-=0.1
-                db_room.current_temperature-=0.1
-                db_room.total_cost+=0.1
+                room.total_cost+=1
+                room.current_temperature-=1
+                db_room.current_temperature-=1
+                db_room.total_cost+=1
             elif room.fan_speed=='medium':
-                room.total_cost+=0.05
-                room.current_temperature-=0.05
-                db_room.current_temperature-=0.05
-                db_room.total_cost+=0.05
+                room.total_cost+=0.5
+                room.current_temperature-=0.5
+                db_room.current_temperature-=0.5
+                db_room.total_cost+=0.5
             else:
-                room.total_cost+=1/30
-                room.current_temperature-=1/30
-                db_room.current_temperature-=1/30
-                db_room.total_cost+=1/30
+                room.total_cost+=0.3
+                room.current_temperature-=0.3
+                db_room.current_temperature-=0.3
+                db_room.total_cost+=0.3
             if room.current_temperature<=room.target_temperature:
+                room.total_cost-=(room.target_temperature-room.current_temperature)
                 room.current_temperature=room.target_temperature
-                room.total_cost-=room.target_temperature-room.current_temperature
                 room.status='SLEEPING'
                 db_room.status='SLEEPING'
-                db_room.total_cost-=room.target_temperature-room.current_temperature
+                db_room.total_cost=room.total_cost
                 db_room.current_temperature=room.target_temperature
-            
-                service_queue.remove(room)
                 # 结束一个详单
                 db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == room.record_id).first()
                 db_record.end_time=datetime.now()
-                db_record.duration=(datetime.now()-db_record.start_time).seconds
+                db_record.duration=room.server_time
                 db_record.current_cost=room.total_cost-db_record.current_cost
+                room.server_time=0
+                db_room.server_time=0
+                service_queue.remove(room)
             db.commit()
         elif room.status=='SLEEPING':
             if room.current_temperature<room.target_temperature+1:
-                room.current_temperature+=0.05
-                db_room.current_temperature+=0.05
+                room.current_temperature+=0.5
+                db_room.current_temperature+=0.5
                 db.commit()
-            elif room.current_temperature>=room.target_temperature+1:
+            if room.current_temperature>=room.target_temperature+1:
                 if len(service_queue)<3:
                     service_queue.append(room)
                     room.status='SERVING'
@@ -217,27 +268,42 @@ def calculate_cost(db):
                     db_room.record_id=db_record.record_id
                     room.record_id=db_record.record_id
                     db.commit()
-            elif room.status=='SHUTDOWN':
+        elif room.status=='SHUTDOWN':
+            if(room.current_temperature<room.initial_temperature):
+                room.current_temperature+=0.5
+                db_room.current_temperature+=0.5
                 if(room.current_temperature>room.initial_temperature):
-                    room.current_temperature-=0.05
-                    db_room.current_temperature-=0.05
-                    if(room.current_temperature<room.initial_temperature):
-                        room.current_temperature=room.initial_temperature
-                        db_room.current_temperature=room.initial_temperature
-                db.commit()
-    timer=threading.Timer(1,calculate_cost,args=(db,))
+                    room.current_temperature=room.initial_temperature
+                    db_room.current_temperature=room.initial_temperature
+            db.commit()
+
+def test_poweron(db):
+    global service_queue,waiting_queue,room_queue
+    schedule(db)
+    calculate_cost(db)
+
+def power_on(db):
+    schedule(db)
+    calculate_cost(db)
+    timer=threading.Timer(10,poweron,args=(db,))    
     timer.start()
+
 
 @router.get("/poweron")
 def poweron(db: Session = Depends(get_db)):
-    schedule(db)
-    calculate_cost(db)
+    power_on(db)
+    return {"msg": "开机成功"}
+
+@router.get("/test_poweron")
+def test(db: Session = Depends(get_db)):
+    test_poweron(db)
     return {"msg": "开机成功"}
 
 
 # 开机请求
 @router.post("/request_on")
 def request_on(room_id: int,db: Session = Depends(get_db)):
+    global service_queue,waiting_queue,room_queue
     flag=1
     for room in room_queue:
         if room.room_id==room_id:
@@ -286,50 +352,67 @@ def request_on(room_id: int,db: Session = Depends(get_db)):
 # 关机请求
 @router.post("/request_off")
 def request_off(room_id: int,db: Session = Depends(get_db)):
+    global service_queue,waiting_queue,room_queue
     for room in room_queue:
         if room.room_id==room_id:
             db_room = db.query(models.Room).filter(models.Room.room_id == room_id).first()
 
-            room.current_temperature=room.initial_temperature
-            db_room.current_temperature=room.initial_temperature
-
             if room.status=='SERVING':
+                # 结束一个详单
+                db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == room.record_id).first()
+                db_record.end_time=datetime.now()
+                db_record.duration=room.server_time
+                db_record.current_cost=room.total_cost-db_record.current_cost
                 room.status='SHUTDOWN'
+                room.server_time=0
                 db_room.status='SHUTDOWN'
+                db_room.server_time=0
                 service_queue.remove(room)
+
             elif room.status=='WAITING':
                 room.status='SHUTDOWN'
                 db_room.status='SHUTDOWN'
                 waiting_queue.remove(room)
+                #删除详单
+                db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == room.record_id).first()
+                db.delete(db_record)
             else:
                 room.status='SHUTDOWN'
                 db_room.status='SHUTDOWN'
             
-            # 结束一个详单
-            db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == room.record_id).first()
-            db_record.end_time=datetime.now()
-            db_record.duration=(datetime.now()-db_record.start_time).seconds
-            db_record.current_cost=room.total_cost-db_record.current_cost
-            #写入数据库
-            db.add(db_record)
             db.commit()
     return {"msg": "关机成功"}
 
 # 调整温度请求
 @router.post("/request_temp")
 def request_temp(room_id: int, target_temperature: float,db: Session = Depends(get_db)):
+    global service_queue,waiting_queue,room_queue
     db_room = db.query(models.Room).filter(models.Room.room_id == room_id).first()
-    db_room.target_temperature = target_temperature
-    db.commit()
     for room in room_queue:
         if room.room_id==room_id:
             room.target_temperature=target_temperature
+            db_room.target_temperature=target_temperature
+            if(room.current_temperature<=room.target_temperature):
+                room.status='SLEEPING'
+                db_room.status='SLEEPING'
+                # 结束一个详单
+                db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == room.record_id).first()
+                db_record.end_time=datetime.now()
+                db_record.duration=room.server_time
+                db_record.current_cost=room.total_cost-db_record.current_cost
+                service_queue.remove(room)
+                room.server_time=0
+                db_room.server_time=0
+                #写入数据库
+                db.add(db_record)
+            db.commit()
             break
     return {"msg": "修改成功"}
 
 # 调整风速请求
 @router.post("/request_speed")
 def request_speed(room_id: int, fan_speed: str,db: Session = Depends(get_db)):
+    global service_queue,waiting_queue,room_queue
     db_room = db.query(models.Room).filter(models.Room.room_id == room_id).first()
     db_room.fan_speed = fan_speed
     db.commit()
@@ -340,7 +423,7 @@ def request_speed(room_id: int, fan_speed: str,db: Session = Depends(get_db)):
                 # 结束一个详单
                 db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == room.record_id).first()
                 db_record.end_time=datetime.now()
-                db_record.duration=(datetime.now()-db_record.start_time).seconds
+                db_record.duration=room.server_time
                 db_record.current_cost=room.total_cost-db_record.current_cost
                 #写入数据库
                 db.add(db_record)
@@ -365,6 +448,7 @@ def request_speed(room_id: int, fan_speed: str,db: Session = Depends(get_db)):
 # 返回当前队列信息
 @router.get("/show")
 def show(db: Session = Depends(get_db)):
+    global service_queue,waiting_queue,room_queue
     # 返回房间id
     service_id_list=[]
     for room in service_queue:
@@ -444,5 +528,83 @@ def schedule(self,db: Session = Depends(get_db)):
     
     priority_scheduling()
     timer = threading.Timer(20, self.schedule)  # 每20s执行一次调度函数
+    timer.start()
+'''
+
+'''
+# 遍历所有房间，计算费用
+def calculate_cost(db):
+    for room in room_queue:
+        db_room = db.query(models.Room).filter(models.Room.room_id == room.room_id).first()
+        if room.status=='SERVING':
+            if room.fan_speed=='high':
+                room.total_cost+=0.1
+                room.current_temperature-=0.1
+                db_room.current_temperature-=0.1
+                db_room.total_cost+=0.1
+            elif room.fan_speed=='medium':
+                room.total_cost+=0.05
+                room.current_temperature-=0.05
+                db_room.current_temperature-=0.05
+                db_room.total_cost+=0.05
+            else:
+                room.total_cost+=1/30
+                room.current_temperature-=1/30
+                db_room.current_temperature-=1/30
+                db_room.total_cost+=1/30
+            if room.current_temperature<=room.target_temperature:
+                room.current_temperature=room.target_temperature
+                room.total_cost-=room.target_temperature-room.current_temperature
+                room.status='SLEEPING'
+                db_room.status='SLEEPING'
+                db_room.total_cost-=room.target_temperature-room.current_temperature
+                db_room.current_temperature=room.target_temperature
+            
+                service_queue.remove(room)
+                # 结束一个详单
+                db_record = db.query(models.ServiceRecord).filter(models.ServiceRecord.record_id == room.record_id).first()
+                db_record.end_time=datetime.now()
+                db_record.duration=(datetime.now()-db_record.start_time).seconds
+                db_record.current_cost=room.total_cost-db_record.current_cost
+            db.commit()
+        elif room.status=='SLEEPING':
+            if room.current_temperature<room.target_temperature+1:
+                room.current_temperature+=0.05
+                db_room.current_temperature+=0.05
+                db.commit()
+            elif room.current_temperature>=room.target_temperature+1:
+                if len(service_queue)<3:
+                    service_queue.append(room)
+                    room.status='SERVING'
+                    db_room.status='SERVING'
+                    # 新建一个详单
+                    db_record = models.ServiceRecord(room_id=room.room_id, request_time=datetime.now(),start_time=datetime.now(),fan_speed=room.fan_speed,current_cost=room.total_cost)
+                    #写入数据库
+                    db.add(db_record)
+                    db.commit()
+                    db_room.record_id=db_record.record_id
+                    room.record_id=db_record.record_id
+                    db.commit()
+                else:
+                    waiting_queue.append(room)
+                    room.status='WAITING'
+                    db_room.status='WAITING'
+                    # 新建一个详单
+                    db_record = models.ServiceRecord(room_id=room.room_id, request_time=datetime.now(), fan_speed=room.fan_speed,current_cost=room.total_cost)
+                    #写入数据库
+                    db.add(db_record)
+                    db.commit()
+                    db_room.record_id=db_record.record_id
+                    room.record_id=db_record.record_id
+                    db.commit()
+            elif room.status=='SHUTDOWN':
+                if(room.current_temperature>room.initial_temperature):
+                    room.current_temperature-=0.05
+                    db_room.current_temperature-=0.05
+                    if(room.current_temperature<room.initial_temperature):
+                        room.current_temperature=room.initial_temperature
+                        db_room.current_temperature=room.initial_temperature
+                db.commit()
+    timer=threading.Timer(1,calculate_cost,args=(db,))
     timer.start()
 '''
