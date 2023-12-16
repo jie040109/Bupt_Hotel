@@ -24,7 +24,7 @@ export function admin_create(p1,p2,p3) {
     params: {
         room_id: p1,
         identity_card: p2,
-        target_temperature: p3,
+        initial_temperature: p3,
 
     },
   })

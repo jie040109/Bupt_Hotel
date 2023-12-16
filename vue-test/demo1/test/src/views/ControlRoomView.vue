@@ -32,9 +32,9 @@
 
 <script>
 import Room from '@/components/Room.vue';
-import { admin_create, admin_modify } from "@/admin";
-import { power_on } from "@/schedule";
-import { show } from '@/schedule';
+import { admin_create, admin_getroom,admin_getroomlist } from "@/admin";
+import { power_on,show} from "@/schedule";
+
 // 设置最小窗口宽度
 const minWidth = 1100;
 
@@ -63,6 +63,22 @@ export default {
             this.isCold = mode === 'cold';
             this.isHot = mode === 'hot';
         },
+        async updateRoom(roomId) {
+            const response = await admin_getroomlist(); // 获取所有房间的信息
+            const roomData = response.data.find(room => room.room_id === roomId); // 找到与 roomId 匹配的房间
+            if (roomData) {
+                const roomIndex = this.rooms.findIndex(room => room.id === roomId); // 在当前组件的 rooms 中找到对应的房间
+                if (roomIndex !== -1) {
+                    // 直接修改 rooms 中的对象
+                    this.rooms[roomIndex] = {
+                        ...this.rooms[roomIndex],
+                        state: roomData.status,
+                        temperature: roomData.current_temperature.toFixed(1),
+                        windSpeed: roomData.fan_speed
+                    };
+                }
+            }
+        },
         initializeRoomData() {
             // 创建一个包含初始房间数据的数组
             return Array.from({ length: 5 }, (_, i) => ({
@@ -73,18 +89,49 @@ export default {
                 windSpeed: 'N/A'
             }));
         },
+        async updateQueues() {
+            try {
+                // 更新 Waiting Queue 和 Serving Queue 的内容
+                const response = await show();
+                console.log(response);
+                this.waitingQueue = response.data[0];
+                this.servingQueue = response.data[1];
+                //console.log(this.waitingQueue);
+                //console.log(this.servingQueue);
+                if (!this.refreshIntervalId){
+                    this.refreshIntervalId = setInterval(this.updateQueues, 5000);
+                }
+                
+            } catch (error) {
+                //console.error("Failed to update queues: ", error);
+            }
+
+            },
+
+            watch:{
+                '$route' (){
+                    clearInterval(this.refreshIntervalId);
+                
+                }
+
+
+            },
+
         initRooms() {
             // 将房间重置为初始状态
             this.rooms = this.initializeRoomData();
+            power_on();
+            this.updateQueues();
+            this.intervalId = setInterval(() => {
+            this.rooms.forEach(room => this.updateRoom(room.id));
+        }, 5000);
         },
-    },
-    created() {
-        // 在组件创建时初始化房间
-        this.initRooms();
-        // 调用 power_on 函数
-        power_on();
-    },
-};
+
+
+        },
+        
+    };
+
 </script>
 
 <style scoped>

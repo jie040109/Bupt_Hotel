@@ -111,6 +111,11 @@ export default {
                 this.temperature = parseInt(temperature);
                 const roomId = parseInt(this.id.slice(-1), 10);
                 request_temp(roomId, temperature);
+                if (!this.timerId) {
+                    this.timerId = setInterval(() => {
+                        this.updateState();
+                    }, 5000);
+                }
             }
         },
         resetState() {
@@ -125,18 +130,14 @@ export default {
                 const roomId = parseInt(this.id.slice(-1), 10);
                 const response =  await user_show(roomId);
                 console.log(response);
-                this.temperature = response.data[0];
+                this.mode = response.data[0].toFixed(1);
+                //this.temperature = response.data[0];
                 this.windSpeed = response.data[1];
                 //this.mode = response.mode;
-                this.consumption = response.data[2];
+                this.consumption = response.data[2].toFixed(2);
             }
         }
     },
-    created() {
-        this.timerId = setInterval(() => {
-            this.updateState();
-        }, 5000);},
-
     beforeDestroy() {
         if (this.timerId){
             clearInterval(this.timerId);
@@ -208,7 +209,7 @@ export default {
 } */
 
 .title-container {
-    flex: 1;
+    flex: 0.9;
     /* 填充剩余空间 */
     text-align: center;
 }
@@ -272,7 +273,7 @@ export default {
 }
 
 .button {
-    padding: 10px 20px;
+    padding:  20px;
     font-size: 16px;
 }
 

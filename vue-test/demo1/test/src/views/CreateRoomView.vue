@@ -28,6 +28,8 @@
 </template>
 
 <script>
+import { admin_create } from "@/admin";
+
 export default {
     data() {
         return {
@@ -38,6 +40,7 @@ export default {
             identity_card: null,
             initial_temperature: null,
             buttonClasses: ['button1', 'button2', 'button3', 'button4', 'button5'],
+            selectedRoomIndex: null,
         };
     },
     methods: {
@@ -45,20 +48,30 @@ export default {
             this.dialogVisible = true;
             this.selectedRoomIndex = index;
         },
-        confirmDialog() {
-            // 执行与输入的数据相关的任何必要操作
-            // 目前，只需关闭对话框
+        async create_room(room_id, identity_card, initial_temperature) {
+            try {
+                // Call the API to create the room
+                  await admin_create(room_id, identity_card, initial_temperature);
 
+
+            } catch (error) {
+                console.error("An error occurred while creating the room", error);
+            }
+        },
+        confirmDialog() {
+            // Perform any necessary operations related to the input data
+            // Currently, just close the dialog
+            this.create_room(this.room_id, this.identity_card, this.initial_temperature);
             this.dialogVisible = false;
 
-            // 可选：重置表单字段
+            // Optional: reset the form fields
             this.room_id = null;
             this.identity_card = null;
             this.initial_temperature = null;
 
-            // 将房间标记为已选择
-            this.selectedRooms[this.selectedRoomIndex] = true;
+            
         },
+       
     },
 };
 </script>
