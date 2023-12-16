@@ -99,7 +99,7 @@ export default {
                 //console.log(this.waitingQueue);
                 //console.log(this.servingQueue);
                 if (!this.refreshIntervalId){
-                    this.refreshIntervalId = setInterval(this.updateQueues, 1000);
+                    this.refreshIntervalId = setInterval(this.updateQueues, 5000);
                 }
                 
             } catch (error) {
@@ -120,11 +120,11 @@ export default {
         initRooms() {
             // 将房间重置为初始状态
             this.rooms = this.initializeRoomData();
-            power_on();
+            //power_on();
             this.updateQueues();
             this.intervalId = setInterval(() => {
             this.rooms.forEach(room => this.updateRoom(room.id));
-        }, 1000);
+        }, 5000);
         },
 
 

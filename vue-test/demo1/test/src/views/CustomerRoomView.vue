@@ -115,11 +115,7 @@ export default {
                 this.temperature = parseInt(temperature);
                 const roomId = parseInt(this.id.slice(-1), 10);
                 request_temp(roomId, temperature);
-                if (!this.timerId) {
-                    this.timerId = setInterval(() => {
-                        this.updateState();
-                    }, 1000);
-                }
+
             }
         },
         resetState() {
@@ -130,17 +126,24 @@ export default {
             this.consumption = 'xx';
         },
         async updateState() {
-            if (!this.isLocked) {
-                const roomId = parseInt(this.id.slice(-1), 10);
-                const response =  await user_show(roomId);
-                console.log(response);
-                this.current_temperature = response.data.current_temperature.toFixed(1);
-                //this.temperature = response.data[0];
-                this.windSpeed = response.data.fan_speed;
-                //this.mode = response.mode;
-                this.consumption = response.data.total_cost.toFixed(2);
-            }
+            
+            const roomId = parseInt(this.id.slice(-1), 10);
+            const response =  await user_show(roomId);
+            console.log(response);
+            this.current_temperature = response.data.current_temperature.toFixed(1);
+            //this.temperature = response.data[0];
+            this.windSpeed = response.data.fan_speed;
+            //this.mode = response.mode;
+            this.consumption = response.data.total_cost.toFixed(2);
+            
         }
+    },
+    created() {
+        if (!this.timerId) {
+                    this.timerId = setInterval(() => {
+                        this.updateState();
+                    }, 5000);
+                }
     },
     beforeDestroy() {
         if (this.timerId){
