@@ -79,8 +79,8 @@ export default {
 <style>
 .dialog {
     position: fixed;
-    top: 50%;
-    left: 50%;
+    top: 65%;
+    left: 80%;
     transform: translate(-50%, -50%);
     border-radius: 4px;
     background: white;
