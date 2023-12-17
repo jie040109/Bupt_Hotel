@@ -1,3 +1,6 @@
+//创建者：王俊杰
+//调度通信接口模块
+
 import request from "@/request";
 
 export function power_on() {

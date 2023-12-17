@@ -1,3 +1,5 @@
+//创建者：王俊杰
+//管理员通信模块
 import request from "@/request";
 
 export function admin_login(p1,) {

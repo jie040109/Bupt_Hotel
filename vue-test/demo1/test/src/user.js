@@ -1,3 +1,6 @@
+//创建者： 王俊杰
+//用户通信模块
+
 import request from "@/request";
 
 export function user_login(p1,p2) {

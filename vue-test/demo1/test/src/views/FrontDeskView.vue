@@ -1,3 +1,21 @@
+<!-- 
+
+template: 定义组件的HTML模板   梁铮越
+script: 定义组件的行为、通信连接 王俊杰
+style: 定义组件的样式         梁铮越
+
+ -->
+
+
+ <!-- 
+
+页面构建完成：12.14  梁铮越
+初始通信连接 12.15   王俊杰
+添加生成excel文件功能 12.16  王俊杰
+删除页面框图,添加账单图片 12.16  梁铮越
+
+  -->
+
 <template>
     <div id="front-desk">
         <img src="../assets/icon.png" alt="Icon" class="icon" />
@@ -47,7 +65,7 @@ export default {
                 const roomId = parseInt(this.roomNumberForBill, 10);
                 const response = await admin_getbills(roomId);
                 console.log(response.data);
-                this.billContent = [response.data]; // 这里你可以添加真实的逻辑
+                //this.billContent = [response.data]; 
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.json_to_sheet(this.billContent);
                 XLSX.utils.book_append_sheet(wb, ws, "Bills");
@@ -75,7 +93,7 @@ export default {
                     // 确认response.data是期望的数组格式
                     console.log(response.data);
 
-                    this.detailsContent = response.data;
+                    //this.detailsContent = response.data;
 
                     const wb = XLSX.utils.book_new();
                     const ws = XLSX.utils.json_to_sheet(this.detailsContent);
@@ -101,13 +119,13 @@ export default {
 
         },
         checkOut() {
-            // Logic for check out
-            // You can implement the logic for checking out here
+            // 退房的逻辑
 
             if (this.roomNumberForBill) {
                 const roomId = parseInt(this.roomNumberForBill, 10);
                 admin_delete(roomId);
-                // 你可以在此处添加更多的逻辑，例如清空输入或显示某种确认信息
+                alert("退房成功");
+                
             }
 
         }
@@ -154,7 +172,7 @@ export default {
 .static-image-container {
     width: 500px;
     height: 500px;
-    /* 或者如果你更喜欢，可以设置一个固定的高度 */
+  
     display: flex;
     justify-content: center;
     margin-bottom: 20px;

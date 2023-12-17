@@ -1,3 +1,21 @@
+<!-- 
+
+template: 定义组件的HTML模板  梁铮越
+script: 定义组件的行为、通信连接 王俊杰
+style: 定义组件的样式        梁铮越
+
+ -->
+ 
+ 
+<!-- 
+
+初始页面构建：12.14 梁铮越
+初始通信连接 12.15  王俊杰
+添加队列更新框 12.16 梁铮越
+队列更新通信连接 12.16  王俊杰
+
+ -->
+
 <template>
     <head>
         <meta name="viewport" content="width=1100px, initial-scale=1, minimum-scale=1">
@@ -29,6 +47,7 @@
         </div>
     </div>
 </template>
+
 
 <script>
 import Room from '@/components/Room.vue';
@@ -133,6 +152,8 @@ export default {
     };
 
 </script>
+
+
 
 <style scoped>
 html,

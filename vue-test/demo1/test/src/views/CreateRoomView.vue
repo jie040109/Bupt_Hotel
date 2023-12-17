@@ -1,3 +1,21 @@
+<!-- 
+
+template: 定义组件的HTML模板    李小芊
+script: 定义组件的行为、通信连接  王俊杰
+style: 定义组件的样式         李小芊
+
+ -->
+
+
+<!-- 
+
+页面构建完成：12.14  李小芊
+初始通信连接 12.15   王俊杰
+修改了一下小bug 12.16   王俊杰
+ 
+ -->
+
+
 <template>
     <div class="control_room_view">
         <!-- <div class="header">
