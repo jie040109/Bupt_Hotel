@@ -1,18 +1,17 @@
 <template>
     <div id="front-desk">
         <img src="../assets/icon.png" alt="Icon" class="icon" />
-        <div class="control-output-container">
-            <div class="output-section" id="bill-output">{{ billContent }}</div>
-            <div class="controls">
-                <input type="number" v-model="roomNumberForBill" placeholder="Enter room number">
-                <button @click="generateBill">生成账单</button>
-            </div>
-        </div>
-        <div class="control-output-container">
-            <div class="output-section" id="details-output">{{ detailsContent }}</div>
-            <div class="controls">
-                <input type="number" v-model="roomNumberForDetails" placeholder="Enter room number">
-                <button @click="generateDetails">生成详单</button>
+        <div class="combined-container">
+            <img src="../assets/FD_static.png" alt="mid-pic" class="static-image-container" />
+            <div class="control-output-container">
+                <div class="controls">
+                    <input type="number" v-model="roomNumberForBill" placeholder="Enter room number">
+                    <button @click="generateBill">生成账单</button>
+                </div>
+                <div class="controls">
+                    <input type="number" v-model="roomNumberForDetails" placeholder="Enter room number">
+                    <button @click="generateDetails">生成详单</button>
+                </div>
             </div>
         </div>
         <div class="checkout">
@@ -20,6 +19,8 @@
         </div>
     </div>
 </template>
+
+
 
 
 <script>
@@ -150,17 +151,40 @@ export default {
     position: relative;
 }
 
+.static-image-container {
+    width: 500px;
+    height: 500px;
+    /* 或者如果你更喜欢，可以设置一个固定的高度 */
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    object-fit: cover;
+}
+
+.combined-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.static-image-container {
+    width: 500px;
+    height: 500px;
+    object-fit: cover;
+    margin-right: 100px;
+    /* 如果需要，可调整间隔 */
+}
+
+.static-image-container img {
+    max-width: 100%;
+    height: auto;
+}
+
 .control-output-container {
     display: flex;
-    flex-direction: row;
-    /* 改为水平布局 */
-    justify-content: center;
-    /* 子项之间保持间隔 */
-    align-items: center;
-    /* 在交叉轴上居中对齐 */
-    width: 100%;
-    margin-bottom: 20px;
-    /* 容器间距 */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 100px;
 }
 
 .controls {
@@ -203,6 +227,7 @@ button {
     white-space: nowrap;
     /* 防止文本换行 */
     overflow: hidden;
+
     /* 隐藏溢出的文本 */
 }
 
@@ -216,35 +241,11 @@ button:hover {
     color: black;
 }
 
-.output-section {
-    background-color: rgba(255, 255, 255, 0.244);
-    border: 1px solid #ccc;
-    padding: 10px;
-    width: 500px;
-    /* 减去选择框和按钮的宽度 */
-    height: 200px;
-    /* 输出框高度 */
-    overflow: auto;
-    margin-right: 10px;
-    margin-bottom: 10px;
-    /* 输入框之间的间隔 */
-    box-sizing: border-box;
-    /* 包括内边距和边框在内的总宽度 */
-    border: 2px solid #ccc;
-    /* 边框样式 */
-    border-radius: 4px;
-    /* 边框圆角 */
-    font-size: 20px;
-    font-weight: bold;
-    font-feature-settings: "tnum";
-    /* 字体大小 */
-}
-
 .checkout {
     display: flex;
     padding: 20px;
     position: relative;
-    left: -5%;
+    left: -8%;
 }
 
 @media (max-width: 768px) {
@@ -252,7 +253,7 @@ button:hover {
     input[type="text"],
     input[type="password"],
     select,
-    button {
+    c button {
         width: 100%;
     }
 }
