@@ -65,7 +65,7 @@ export default {
                 const roomId = parseInt(this.roomNumberForBill, 10);
                 const response = await admin_getbills(roomId);
                 console.log(response.data);
-                //this.billContent = [response.data]; 
+                this.billContent = [response.data]; 
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.json_to_sheet(this.billContent);
                 XLSX.utils.book_append_sheet(wb, ws, "Bills");
@@ -93,7 +93,7 @@ export default {
                     // 确认response.data是期望的数组格式
                     console.log(response.data);
 
-                    //this.detailsContent = response.data;
+                    this.detailsContent = response.data;
 
                     const wb = XLSX.utils.book_new();
                     const ws = XLSX.utils.json_to_sheet(this.detailsContent);
